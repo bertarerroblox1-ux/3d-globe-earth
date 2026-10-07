@@ -3,41 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Explorer — Our World</title>
+  <title>OceanExplorer — Interactive Ocean Knowledge Hub</title>
   <style>
     :root {
-      --bg0: #010510;
-      --bg1: #051829;
-      --bg2: #0d2845;
-      --accent: #67d9ff;
-      --accent-dark: #4ba8d8;
-      --text: #e8faff;
-      --muted: #a9c9d8;
+      --primary: #1a6b9f;
+      --secondary: #0d4a7a;
+      --accent: #4db8ff;
+      --accent-light: #7ed3ff;
+      --text: #e8f4ff;
+      --text-muted: #a9c9d8;
+      --bg-dark: #0a1929;
+      --bg-light: #0f2847;
+      --border: rgba(77, 184, 255, 0.2);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     html, body {
-      margin: 0;
       width: 100%;
       height: 100%;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
-      background: var(--bg0);
-      overflow: hidden;
+      background: linear-gradient(135deg, #040e1f 0%, #0a1929 50%, #040e1f 100%);
+      overflow-x: hidden;
     }
 
-    #root {
-      display: flex;
-      height: 100%;
+    /* HEADER */
+    header {
+      position: fixed;
+      top: 0;
       width: 100%;
+      background: rgba(10, 25, 41, 0.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1000;
+      padding: 14px 0;
     }
 
-    /* Canvas side */
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent-light);
+      text-shadow: 0 0 10px rgba(77, 184, 255, 0.4);
+    }
+
+    nav a {
+      margin-left: 28px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.8px;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--accent-light);
+    }
+
+    /* MAIN CONTAINER */
+    #app {
+      display: flex;
+      min-height: 100vh;
+      padding-top: 60px;
+    }
+
+    /* CANVAS SECTION */
     #canvas-section {
       flex: 1;
       position: relative;
-      background: radial-gradient(circle at center, rgba(20, 55, 85, 0.85) 0%, rgba(5, 10, 20, 0.95) 35%, rgba(0, 0, 0, 1) 80%);
+      background: linear-gradient(180deg, rgba(10, 45, 85, 0.8) 0%, rgba(5, 20, 40, 0.95) 50%, rgba(0, 0, 0, 1) 100%);
+      min-height: 100vh;
     }
 
     #canvas-container {
@@ -46,14 +97,16 @@
       cursor: grab;
     }
 
-    #canvas-container:active { cursor: grabbing; }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
 
     .canvas-hud {
       position: absolute;
-      top: 16px;
-      left: 16px;
+      top: 20px;
+      left: 20px;
       background: rgba(5, 15, 25, 0.55);
-      border: 1px solid rgba(103, 217, 255, 0.3);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 10px 14px;
       font-size: 11px;
@@ -62,99 +115,153 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       text-transform: uppercase;
-      z-index: 5;
     }
 
-    /* Info sidebar */
-    #info-section {
-      width: 380px;
+    /* SIDEBAR */
+    #sidebar {
+      width: 400px;
       background: linear-gradient(135deg, rgba(13, 40, 69, 0.95) 0%, rgba(5, 18, 41, 0.98) 100%);
-      border-left: 1px solid rgba(103, 217, 255, 0.2);
-      overflow-y: auto;
+      border-left: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      z-index: 10;
+      max-height: 100vh;
+      overflow-y: auto;
     }
 
-    #info-section::-webkit-scrollbar {
+    #sidebar::-webkit-scrollbar {
       width: 6px;
     }
 
-    #info-section::-webkit-scrollbar-track {
-      background: rgba(103, 217, 255, 0.05);
+    #sidebar::-webkit-scrollbar-track {
+      background: rgba(77, 184, 255, 0.05);
     }
 
-    #info-section::-webkit-scrollbar-thumb {
-      background: rgba(103, 217, 255, 0.3);
+    #sidebar::-webkit-scrollbar-thumb {
+      background: rgba(77, 184, 255, 0.3);
       border-radius: 3px;
     }
 
-    .info-header {
+    .sidebar-header {
       padding: 20px 18px;
-      border-bottom: 1px solid rgba(103, 217, 255, 0.15);
+      border-bottom: 1px solid var(--border);
       background: rgba(7, 20, 35, 0.5);
     }
 
-    .info-header h1 {
+    .sidebar-header h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 1px;
-      color: var(--accent);
-      text-shadow: 0 0 10px rgba(103, 217, 255, 0.4);
+      color: var(--accent-light);
+      text-shadow: 0 0 10px rgba(77, 184, 255, 0.4);
     }
 
-    .info-header p {
+    .sidebar-header p {
       margin: 6px 0 0 0;
       font-size: 11px;
-      color: var(--muted);
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
 
-    .info-content {
+    .sidebar-content {
       flex: 1;
       padding: 18px;
       overflow-y: auto;
     }
 
-    .card {
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 18px 0 10px 0;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ocean-button {
+      background: linear-gradient(135deg, rgba(26, 107, 159, 0.6), rgba(13, 74, 122, 0.6));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      letter-spacing: 0.5px;
+    }
+
+    .ocean-button:hover {
+      background: linear-gradient(135deg, rgba(77, 184, 255, 0.4), rgba(77, 184, 255, 0.2));
+      border-color: var(--accent-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(77, 184, 255, 0.15);
+      color: var(--accent-light);
+    }
+
+    .ocean-button.active {
+      background: linear-gradient(135deg, rgba(77, 184, 255, 0.5), rgba(77, 184, 255, 0.3));
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+      box-shadow: 0 0 12px rgba(77, 184, 255, 0.3), inset 0 0 10px rgba(77, 184, 255, 0.1);
+    }
+
+    .info-card {
       background: rgba(10, 25, 40, 0.6);
-      border: 1px solid rgba(103, 217, 255, 0.18);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 12px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       transition: all 0.3s ease;
-      cursor: pointer;
+      display: none;
     }
 
-    .card:hover {
-      background: rgba(15, 35, 55, 0.7);
-      border-color: rgba(103, 217, 255, 0.35);
-      box-shadow: 0 8px 24px rgba(103, 217, 255, 0.1);
-      transform: translateY(-2px);
+    .info-card.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card-title {
       font-size: 13px;
       font-weight: 700;
-      color: var(--accent);
-      margin: 0 0 6px 0;
+      color: var(--accent-light);
+      margin: 0 0 8px 0;
       letter-spacing: 0.5px;
     }
 
     .card-text {
       font-size: 11px;
-      color: var(--muted);
-      line-height: 1.5;
+      color: var(--text-muted);
+      line-height: 1.6;
       margin: 0;
     }
 
     .card-stat {
       display: inline-block;
-      background: rgba(103, 217, 255, 0.08);
+      background: rgba(77, 184, 255, 0.08);
+      border: 1px solid rgba(77, 184, 255, 0.2);
       border-radius: 6px;
       padding: 4px 8px;
       margin-top: 8px;
@@ -163,205 +270,314 @@
       font-weight: 600;
     }
 
-    .info-footer {
+    .sidebar-footer {
       padding: 14px 18px;
-      border-top: 1px solid rgba(103, 217, 255, 0.15);
+      border-top: 1px solid var(--border);
       background: rgba(7, 20, 35, 0.5);
       text-align: center;
       font-size: 10px;
-      color: var(--muted);
+      color: var(--text-muted);
     }
 
-    /* Responsive */
+    /* RESPONSIVE */
     @media (max-width: 1024px) {
-      #info-section {
-        width: 300px;
+      #sidebar {
+        width: 320px;
       }
     }
 
     @media (max-width: 768px) {
-      #root {
+      #app {
         flex-direction: column;
       }
 
       #canvas-section {
-        flex: 0 0 60%;
+        min-height: 50vh;
       }
 
-      #info-section {
+      #sidebar {
         width: 100%;
-        height: 40%;
+        max-height: 50vh;
       }
     }
   </style>
 </head>
 <body>
-  <div id="root">
+  <!-- HEADER -->
+  <header>
+    <div class="header-content">
+      <div class="logo">🌊 OceanExplorer</div>
+      <nav>
+        <a class="nav-link active" data-section="overview">Overview</a>
+        <a class="nav-link" data-section="creatures">Creatures</a>
+        <a class="nav-link" data-section="facts">Facts</a>
+        <a class="nav-link" data-section="conservation">Conservation</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN APP -->
+  <div id="app">
+    <!-- CANVAS SECTION -->
     <div id="canvas-section">
       <div id="canvas-container"></div>
-      <div class="canvas-hud">🌍 3D Explorer • Earth</div>
+      <div class="canvas-hud">🌊 3D Ocean Explorer • Interactive</div>
     </div>
 
-    <div id="info-section">
-      <div class="info-header">
-        <h1>🌎 Our World</h1>
-        <p>Interactive Knowledge Base</p>
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <h2>🌊 Ocean Knowledge</h2>
+        <p>Interactive Learning Hub</p>
       </div>
 
-      <div class="info-content" id="infoContent">
-        <div class="card">
-          <p class="card-title">🌍 Earth Overview</p>
-          <p class="card-text">Our planet is the only known world to harbor life. Formed 4.5 billion years ago, Earth orbits the Sun at a distance of 150 million kilometers.</p>
-          <span class="card-stat">Age: 4.54 Billion Years</span>
+      <div class="sidebar-content">
+        <!-- OVERVIEW SECTION -->
+        <div id="overview" class="section-content active">
+          <div class="section-title">🌍 About Oceans</div>
+          <div class="button-group">
+            <button class="ocean-button active" data-topic="overview-basics">Ocean Basics</button>
+            <button class="ocean-button" data-topic="overview-layers">Water Layers</button>
+            <button class="ocean-button" data-topic="overview-currents">Ocean Currents</button>
+            <button class="ocean-button" data-topic="overview-temperature">Temperature & Salinity</button>
+          </div>
+
+          <div id="overview-basics" class="info-card active">
+            <p class="card-title">🌊 Ocean Basics</p>
+            <p class="card-text">Earth's oceans cover 71% of the planet's surface and contain 97% of Earth's water. They are crucial for climate regulation, food production, and biodiversity. The oceans absorb about 25% of human carbon dioxide emissions, playing a vital role in climate stability.</p>
+            <span class="card-stat">Coverage: 361 Million km²</span>
+            <span class="card-stat" style="margin-left: 6px;">Avg Depth: 3.7 km</span>
+          </div>
+
+          <div id="overview-layers" class="info-card">
+            <p class="card-title">🔷 Water Layers</p>
+            <p class="card-text"><strong>Sunlight Zone (0-200m):</strong> Bright, warm, most life here.<br><strong>Twilight Zone (200-1000m):</strong> Dim light, temperature drops.<br><strong>Midnight Zone (1000-4000m):</strong> Pitch black, extreme pressure.<br><strong>Abyssal Zone (4000-6000m):</strong> Nearly freezing, minimal life.</p>
+            <span class="card-stat">Pressure at 1000m: 100 atm</span>
+          </div>
+
+          <div id="overview-currents" class="info-card">
+            <p class="card-title">🌀 Ocean Currents</p>
+            <p class="card-text">Ocean currents are like rivers within the ocean, driven by wind, gravity, and Earth's rotation. The Gulf Stream carries warm water from the tropics to the North Atlantic. The Antarctic Circumpolar Current is the largest ocean current, connecting all oceans.</p>
+            <span class="card-stat">Gulf Stream Speed: 2 m/s</span>
+          </div>
+
+          <div id="overview-temperature" class="info-card">
+            <p class="card-title">🌡️ Temperature & Salinity</p>
+            <p class="card-text">Ocean temperature varies from -2°C in polar regions to 30°C in the tropics. Salinity averages 35 ppt (parts per thousand), essential for marine life. Deep ocean temperatures remain near 0-4°C year-round, creating stable habitats for deep-sea organisms.</p>
+            <span class="card-stat">Avg Salinity: 35 ppt</span>
+          </div>
         </div>
 
-        <div class="card">
-          <p class="card-title">🌊 Oceans & Water</p>
-          <p class="card-text">71% of Earth's surface is covered by water. The oceans contain 97% of Earth's water and support incredible biodiversity.</p>
-          <span class="card-stat">Volume: 1.335 Billion km³</span>
+        <!-- CREATURES SECTION -->
+        <div id="creatures" class="section-content" style="display: none;">
+          <div class="section-title">🐠 Marine Life</div>
+          <div class="button-group">
+            <button class="ocean-button" data-topic="creatures-whales">Whales & Cetaceans</button>
+            <button class="ocean-button" data-topic="creatures-fish">Fish Species</button>
+            <button class="ocean-button" data-topic="creatures-deep">Deep Sea Creatures</button>
+            <button class="ocean-button" data-topic="creatures-coral">Coral Reefs</button>
+          </div>
+
+          <div id="creatures-whales" class="info-card">
+            <p class="card-title">🐋 Whales & Cetaceans</p>
+            <p class="card-text">Whales are the largest animals ever to exist on Earth. The Blue Whale can reach 30 meters in length and weigh 200 tons. They are intelligent, social mammals that communicate through complex songs and migrate thousands of kilometers annually.</p>
+            <span class="card-stat">Blue Whale Length: 30m</span>
+            <span class="card-stat" style="margin-left: 6px;">Migration: 25,000km/year</span>
+          </div>
+
+          <div id="creatures-fish" class="info-card">
+            <p class="card-title">🐟 Fish Species</p>
+            <p class="card-text">There are over 34,000 species of fish in the oceans, ranging from tiny gobies to massive marlins. Fish display incredible diversity in color, behavior, and adaptation. Many species are critical to human food security and ocean ecosystems.</p>
+            <span class="card-stat">Species Count: 34,000+</span>
+          </div>
+
+          <div id="creatures-deep" class="info-card">
+            <p class="card-title">👹 Deep Sea Creatures</p>
+            <p class="card-text">The deep ocean is home to bizarre and alien-like creatures adapted to extreme pressure and darkness. Anglerfish use bioluminescent lures, giant squid reach 12 meters, and many organisms produce their own light through bioluminescence—a stunning adaptation to the abyss.</p>
+            <span class="card-stat">Deepest Fish: 8,000m+</span>
+          </div>
+
+          <div id="creatures-coral" class="info-card">
+            <p class="card-title">🪸 Coral Reefs</p>
+            <p class="card-text">Coral reefs are the rainforests of the ocean, housing 25% of all marine species despite covering less than 0.1% of the ocean floor. They are built by tiny animals (polyps) and provide food, shelter, and protection to millions of species. Coral reefs are currently under threat from climate change and ocean acidification.</p>
+            <span class="card-stat">Species Diversity: 25% of marine life</span>
+          </div>
         </div>
 
-        <div class="card">
-          <p class="card-title">🏔️ Mountains & Continents</p>
-          <p class="card-text">Seven continents shape our world. The highest mountain is Mount Everest at 8,849 meters above sea level.</p>
-          <span class="card-stat">Continents: 7</span>
+        <!-- FACTS SECTION -->
+        <div id="facts" class="section-content" style="display: none;">
+          <div class="section-title">📊 Ocean Facts</div>
+          <div class="button-group">
+            <button class="ocean-button" data-topic="facts-composition">Composition</button>
+            <button class="ocean-button" data-topic="facts-resources">Resources</button>
+            <button class="ocean-button" data-topic="facts-biodiversity">Biodiversity</button>
+            <button class="ocean-button" data-topic="facts-exploration">Exploration</button>
+          </div>
+
+          <div id="facts-composition" class="info-card">
+            <p class="card-title">🧪 Ocean Composition</p>
+            <p class="card-text">Ocean water is 96.5% H₂O, with dissolved salts (primarily NaCl), gases (O₂, CO₂, N₂), and organic matter. The ocean contains all naturally occurring elements, including gold, copper, and uranium. This composition makes seawater unsuitable for drinking but perfect for marine life.</p>
+            <span class="card-stat">Dissolved Salts: 34.7 ppt</span>
+          </div>
+
+          <div id="facts-resources" class="info-card">
+            <p class="card-title">💎 Ocean Resources</p>
+            <p class="card-text">Oceans provide 50% of global oxygen production, regulate climate, and support 3 billion people who depend on marine biodiversity. Fisheries contribute $150 billion annually to global economy. Oil and gas reserves lie beneath the ocean floor. The ocean is humanity's most valuable resource.</p>
+            <span class="card-stat">Oxygen Production: 50%</span>
+          </div>
+
+          <div id="facts-biodiversity" class="info-card">
+            <p class="card-title">🦑 Marine Biodiversity</p>
+            <p class="card-text">The ocean contains an estimated 2.2 million species, with many yet to be discovered. The diversity is greatest in shallow tropical waters and decreases with depth and latitude. Coral reefs, seagrass beds, and mangroves are biodiversity hotspots supporting countless species.</p>
+            <span class="card-stat">Estimated Species: 2.2 Million</span>
+          </div>
+
+          <div id="facts-exploration" class="info-card">
+            <p class="card-title">🔭 Ocean Exploration</p>
+            <p class="card-text">Only 5% of the ocean has been explored. The deepest point is Mariana Trench at 11,000 meters. Recent advances in submersible technology are revealing new species and geological features. The deep ocean remains one of Earth's final frontiers for discovery.</p>
+            <span class="card-stat">Explored: 5% only</span>
+          </div>
         </div>
 
-        <div class="card">
-          <p class="card-title">🌤️ Atmosphere</p>
-          <p class="card-text">Earth's atmosphere is composed mainly of nitrogen (78%) and oxygen (21%), protecting life from solar radiation.</p>
-          <span class="card-stat">Pressure: 101.3 kPa</span>
-        </div>
+        <!-- CONSERVATION SECTION -->
+        <div id="conservation" class="section-content" style="display: none;">
+          <div class="section-title">♻️ Ocean Conservation</div>
+          <div class="button-group">
+            <button class="ocean-button" data-topic="conservation-climate">Climate Change</button>
+            <button class="ocean-button" data-topic="conservation-pollution">Pollution</button>
+            <button class="ocean-button" data-topic="conservation-overfishing">Overfishing</button>
+            <button class="ocean-button" data-topic="conservation-solutions">Solutions</button>
+          </div>
 
-        <div class="card">
-          <p class="card-title">🌙 The Moon</p>
-          <p class="card-text">Earth's only natural satellite, the Moon is 384,400 km away. It causes tides and stabilizes Earth's rotation.</p>
-          <span class="card-stat">Orbital Period: 27.3 Days</span>
-        </div>
+          <div id="conservation-climate" class="info-card">
+            <p class="card-title">🌡️ Climate Change Impact</p>
+            <p class="card-text">Rising ocean temperatures are causing coral bleaching, disrupting marine ecosystems, and accelerating sea level rise. Warmer water holds less oxygen, creating "dead zones." Ocean acidification threatens shell-forming organisms like pteropods and mollusks, disrupting food chains.</p>
+            <span class="card-stat">Sea Level Rise: +3.3mm/year</span>
+          </div>
 
-        <div class="card">
-          <p class="card-title">🌱 Biodiversity</p>
-          <p class="card-text">Earth hosts an estimated 8.7 million species. Rainforests, coral reefs, and ecosystems cover diverse habitats.</p>
-          <span class="card-stat">Species: 8.7 Million</span>
-        </div>
+          <div id="conservation-pollution" class="info-card">
+            <p class="card-title">🚫 Ocean Pollution</p>
+            <p class="card-text">8 million tons of plastic enter oceans annually. Microplastics are found in deepest trenches and marine animals. Oil spills, chemical runoff, and noise pollution damage marine habitats. The Great Pacific Garbage Patch is twice the size of Texas and growing.</p>
+            <span class="card-stat">Plastic Waste: 8M tons/year</span>
+          </div>
 
-        <div class="card">
-          <p class="card-title">⚡ Natural Resources</p>
-          <p class="card-text">Rich in fossil fuels, minerals, and renewable energy sources. Sustainable management is crucial for future generations.</p>
-          <span class="card-stat">Renewable Focus: Growing</span>
-        </div>
+          <div id="conservation-overfishing" class="info-card">
+            <p class="card-title">🐟 Overfishing Crisis</p>
+            <p class="card-text">33% of fish stocks are overfished, and 60% are at maximum capacity. Industrial fishing practices destroy ecosystems and deplete breeding populations. Many species face extinction. Sustainable fishing and marine protected areas are essential for recovery.</p>
+            <span class="card-stat">Overfished Stocks: 33%</span>
+          </div>
 
-        <div class="card">
-          <p class="card-title">👨‍👩‍👧‍👦 Human Population</p>
-          <p class="card-text">Over 8 billion people inhabit Earth, spread across countries and cultures. Earth is home to incredible human diversity.</p>
-          <span class="card-stat">Population: 8+ Billion</span>
-        </div>
-
-        <div class="card">
-          <p class="card-title">🌡️ Climate & Weather</p>
-          <p class="card-text">Earth experiences diverse climates from tropical to polar. Climate change is reshaping our planet's future.</p>
-          <span class="card-stat">Avg Temp: 15°C</span>
-        </div>
-
-        <div class="card">
-          <p class="card-title">🚀 Space & Exploration</p>
-          <p class="card-text">Humanity is exploring space from Earth's surface. Our satellite network and space programs expand our cosmic reach.</p>
-          <span class="card-stat">Active Satellites: 5,000+</span>
+          <div id="conservation-solutions" class="info-card">
+            <p class="card-title">✅ Conservation Solutions</p>
+            <p class="card-text">Marine protected areas, sustainable fishing practices, plastic reduction, renewable energy, and international cooperation are key solutions. Supporting ocean conservation through policy, education, and lifestyle choices helps protect our oceans for future generations.</p>
+            <span class="card-stat">Protected Areas: Growing</span>
+          </div>
         </div>
       </div>
 
-      <div class="info-footer">
-        © 2026 3D Explorer • Earth Knowledge Hub
+      <div class="sidebar-footer">
+        © 2026 OceanExplorer • Learn • Explore • Protect
       </div>
     </div>
   </div>
 
+  <!-- THREE.JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
+    // SCENE SETUP
     const container = document.getElementById('canvas-container');
-
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x010510);
-    scene.fog = new THREE.FogExp2(0x010510, 0.018);
+    scene.background = new THREE.Color(0x0a2d55);
+    scene.fog = new THREE.FogExp2(0x0a2d55, 0.015);
 
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2500);
-    camera.position.set(0, 0.5, 3.8);
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 3000);
+    camera.position.set(0, 2, 5.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
-    renderer.shadowMap.enabled = true;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
-    // LIGHTING SETUP
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    // LIGHTING
+    const ambientLight = new THREE.AmbientLight(0x4db8ff, 0.5);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.8);
-    sunLight.position.set(6, 3, 7);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    const sunLight = new THREE.DirectionalLight(0x7ed3ff, 1.2);
+    sunLight.position.set(4, 6, 5);
     scene.add(sunLight);
 
-    const rimLight = new THREE.DirectionalLight(0x7dd3ff, 0.8);
-    rimLight.position.set(-6, -2, -5);
-    scene.add(rimLight);
+    const underwaterLight = new THREE.DirectionalLight(0x3d7ba8, 0.6);
+    underwaterLight.position.set(-5, -2, -5);
+    scene.add(underwaterLight);
 
-    // EARTH GROUP
-    const earthGroup = new THREE.Group();
-    scene.add(earthGroup);
+    // OCEAN WATER SPHERE
+    const oceanGroup = new THREE.Group();
+    scene.add(oceanGroup);
 
-    const textureLoader = new THREE.TextureLoader();
-
-    const earthMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
-    const earthNormal = textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg');
-    const earthSpec = textureLoader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg');
-    const earthClouds = textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png');
-
-    const earthMaterial = new THREE.MeshPhongMaterial({
-      map: earthMap,
-      bumpMap: earthNormal,
-      bumpScale: 0.025,
-      specularMap: earthSpec,
-      specular: new THREE.Color(0x333333),
-      shininess: 12,
-      emissive: new THREE.Color(0x0a1520),
-      emissiveIntensity: 0.12
-    });
-
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), earthMaterial);
-    earth.castShadow = true;
-    earth.receiveShadow = true;
-    earthGroup.add(earth);
-
-    const cloudMaterial = new THREE.MeshPhongMaterial({
-      map: earthClouds,
+    // Water material with wave effect
+    const waterGeometry = new THREE.SphereGeometry(2, 256, 256);
+    const waterMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        waterColor: { value: new THREE.Color(0x1a6b9f) },
+        foamColor: { value: new THREE.Color(0x7ed3ff) }
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        uniform float time;
+        
+        void main() {
+          vPosition = position;
+          vec3 pos = position;
+          
+          // Wave simulation
+          float wave = sin(pos.x * 2.0 + time * 0.5) * 0.02;
+          wave += sin(pos.y * 2.5 + time * 0.4) * 0.015;
+          wave += cos(pos.z * 1.8 + time * 0.3) * 0.01;
+          
+          pos += normal * wave;
+          
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 waterColor;
+        uniform vec3 foamColor;
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        
+        void main() {
+          vec3 viewDir = normalize(cameraPosition - vPosition);
+          float fresnel = pow(1.0 - dot(vNormal, viewDir), 3.0);
+          
+          vec3 color = mix(waterColor, foamColor, fresnel);
+          gl_FragColor = vec4(color, 0.9);
+        }
+      `,
+      side: THREE.FrontSide,
       transparent: true,
-      opacity: 0.42,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.05
+      wireframe: false
     });
 
-    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.032, 128, 128), cloudMaterial);
-    earthGroup.add(clouds);
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    oceanGroup.add(water);
 
-    // ATMOSPHERE GLOW
-    const atmosphereMaterial = new THREE.ShaderMaterial({
+    // UNDERWATER GLOW EFFECT
+    const glowGeometry = new THREE.SphereGeometry(2.15, 128, 128);
+    const glowMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
       uniforms: {
-        glowColor: { value: new THREE.Color(0x5ab7ff) },
-        intensity: { value: 1.6 }
+        glowColor: { value: new THREE.Color(0x4db8ff) },
+        intensity: { value: 1.4 }
       },
       vertexShader: `
         varying vec3 vNormal;
@@ -375,117 +591,181 @@
         uniform float intensity;
         varying vec3 vNormal;
         void main() {
-          float glow = pow(0.72 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.2);
-          gl_FragColor = vec4(glowColor * glow * intensity, 0.8);
+          float glow = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.2);
+          gl_FragColor = vec4(glowColor * glow * intensity, 0.6);
         }
       `
     });
 
-    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.15, 128, 128), atmosphereMaterial);
-    earthGroup.add(atmosphere);
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    oceanGroup.add(glow);
 
-    // MOON
-    const moonTexture = textureLoader.load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
-    const moon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.18, 64, 64),
-      new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 1, metalness: 0 })
-    );
-    moon.position.set(2.35, 0.6, 0.15);
-    moon.castShadow = true;
-    scene.add(moon);
+    // MARINE PARTICLES (FISH-LIKE)
+    const particleGeometry = new THREE.BufferGeometry();
+    const particleCount = 200;
+    const positions = [];
+    const colors = [];
 
-    // ORBIT RING
-    const orbitRing = new THREE.Mesh(
-      new THREE.TorusGeometry(2.3, 0.004, 8, 200),
-      new THREE.MeshBasicMaterial({ color: 0x5ab7ff, transparent: true, opacity: 0.4 })
-    );
-    orbitRing.rotation.x = Math.PI / 2.3;
-    scene.add(orbitRing);
-
-    // ENHANCED STARFIELD
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 4000;
-    const starPositions = [];
-    const starColors = [];
-
-    for (let i = 0; i < starCount; i++) {
-      const radius = 28 + Math.random() * 70;
+    for (let i = 0; i < particleCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
+      const r = 1.5 + Math.random() * 2;
 
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.cos(phi);
-      const z = radius * Math.sin(phi) * Math.sin(theta);
+      positions.push(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.cos(phi),
+        r * Math.sin(phi) * Math.sin(theta)
+      );
 
-      starPositions.push(x, y, z);
-
-      const hue = 0.5 + Math.random() * 0.25;
-      const sat = 0.7 + Math.random() * 0.3;
-      const light = 0.6 + Math.random() * 0.4;
-      const color = new THREE.Color().setHSL(hue, sat, light);
-      starColors.push(color.r, color.g, color.b);
+      const col = Math.random();
+      if (col < 0.5) {
+        colors.push(0.3, 0.8, 1.0); // Blue fish
+      } else {
+        colors.push(0.8, 0.6, 0.2); // Golden fish
+      }
     }
 
-    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-    starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+    particleGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
 
-    const stars = new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({
-        size: 0.12,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.92,
-        depthWrite: false
-      })
-    );
-    scene.add(stars);
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.08,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8
+    });
 
-    // NEBULA BACKGROUND
-    const nebula = new THREE.Mesh(
-      new THREE.SphereGeometry(32, 32, 32),
-      new THREE.MeshBasicMaterial({
-        color: 0x1a3a5a,
-        transparent: true,
-        opacity: 0.08,
-        side: THREE.BackSide
-      })
-    );
-    scene.add(nebula);
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    oceanGroup.add(particles);
 
-    // CAMERA CONTROLS
+    // BUBBLES
+    const bubbleGeometry = new THREE.BufferGeometry();
+    const bubbleCount = 100;
+    const bubblePositions = [];
+
+    for (let i = 0; i < bubbleCount; i++) {
+      bubblePositions.push(
+        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 6
+      );
+    }
+
+    bubbleGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(bubblePositions), 3));
+
+    const bubbleMaterial = new THREE.PointsMaterial({
+      color: 0x7ed3ff,
+      size: 0.05,
+      transparent: true,
+      opacity: 0.4
+    });
+
+    const bubbles = new THREE.Points(bubbleGeometry, bubbleMaterial);
+    oceanGroup.add(bubbles);
+
+    // CONTROLS
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.065;
+    controls.dampingFactor = 0.08;
     controls.enableZoom = true;
-    controls.minDistance = 1.7;
-    controls.maxDistance = 9;
+    controls.minDistance = 2;
+    controls.maxDistance = 12;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.6;
-    controls.rotateSpeed = 0.9;
+    controls.autoRotateSpeed = 0.4;
 
-    let t = 0;
+    let time = 0;
 
     function animate() {
       requestAnimationFrame(animate);
 
-      t += 0.01;
+      time += 0.01;
 
-      earth.rotation.y += 0.0016;
-      clouds.rotation.y += 0.0024;
-      atmosphere.rotation.y += 0.0012;
+      // Water animation
+      waterMaterial.uniforms.time.value = time;
 
-      stars.rotation.y -= 0.00015;
-      stars.rotation.x = Math.sin(t * 0.25) * 0.1;
-      nebula.rotation.y += 0.00018;
+      // Particle movement
+      if (particles.geometry.attributes.position) {
+        const posAttr = particles.geometry.attributes.position;
+        for (let i = 0; i < particleCount; i++) {
+          const idx = i * 3;
+          const x = posAttr.array[idx];
+          const y = posAttr.array[idx + 1];
+          const z = posAttr.array[idx + 2];
 
-      moon.position.x = 2.35 + Math.sin(t * 0.85) * 0.22;
-      moon.position.y = 0.6 + Math.cos(t * 0.95) * 0.2;
-      moon.position.z = 0.15 + Math.sin(t * 0.7) * 0.2;
+          posAttr.array[idx] = x + Math.sin(time + i) * 0.002;
+          posAttr.array[idx + 1] = y + Math.cos(time + i * 0.5) * 0.002;
+          posAttr.array[idx + 2] = z + Math.sin(time * 0.5 + i) * 0.002;
+        }
+        posAttr.needsUpdate = true;
+      }
+
+      // Bubble rising animation
+      if (bubbles.geometry.attributes.position) {
+        const bubbleAttr = bubbles.geometry.attributes.position;
+        for (let i = 0; i < bubbleCount; i++) {
+          bubbleAttr.array[i * 3 + 1] += 0.008;
+          if (bubbleAttr.array[i * 3 + 1] > 3) {
+            bubbleAttr.array[i * 3 + 1] = -3;
+          }
+        }
+        bubbleAttr.needsUpdate = true;
+      }
+
+      oceanGroup.rotation.y += 0.0001;
 
       controls.update();
       renderer.render(scene, camera);
     }
+
+    // NAVIGATION AND SIDEBAR LOGIC
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sectionContents = document.querySelectorAll('.section-content');
+    const oceanButtons = document.querySelectorAll('.ocean-button');
+    const infoCards = document.querySelectorAll('.info-card');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const section = e.target.dataset.section;
+        
+        // Update active nav link
+        navLinks.forEach(l => l.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Update section content
+        sectionContents.forEach(sc => sc.style.display = 'none');
+        document.getElementById(section).style.display = 'block';
+
+        // Reset buttons
+        oceanButtons.forEach(btn => {
+          if (btn.parentElement.parentElement.id === section) {
+            btn.classList.remove('active');
+            if (btn === btn.parentElement.children[0]) {
+              btn.classList.add('active');
+              const topic = btn.dataset.topic;
+              infoCards.forEach(card => card.classList.remove('active'));
+              const firstCard = document.getElementById(topic);
+              if (firstCard) firstCard.classList.add('active');
+            }
+          }
+        });
+      });
+    });
+
+    oceanButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const topic = e.target.dataset.topic;
+        const section = e.target.parentElement.parentElement;
+
+        // Update active button
+        section.querySelectorAll('.ocean-button').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Update info cards
+        infoCards.forEach(card => card.classList.remove('active'));
+        const targetCard = document.getElementById(topic);
+        if (targetCard) targetCard.classList.add('active');
+      });
+    });
 
     window.addEventListener('resize', () => {
       const width = container.clientWidth;
