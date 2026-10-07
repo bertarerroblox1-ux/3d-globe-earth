@@ -3,24 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Реалістичний 3D Глобус Землі</title>
+  <title>3D Explorer — Realistic Earth</title>
   <style>
     :root {
-      --bg1: #020b15;
-      --bg2: #081d2d;
-      --panel-bg: rgba(9, 18, 30, 0.72);
-      --panel-border: rgba(120, 210, 255, 0.38);
-      --text: #dff8ff;
-      --accent: #5dd9ff;
-      --muted: #9bbfcf;
+      --bg0: #020914;
+      --bg1: #061d2f;
+      --bg2: #0d2f44;
+      --panel-bg: rgba(7, 18, 29, 0.72);
+      --panel-border: rgba(102, 214, 255, 0.35);
+      --text: #e8faff;
+      --muted: #a9c9d8;
+      --accent: #67d9ff;
     }
+
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 50%, var(--bg2) 0%, var(--bg1) 50%, #000 100%);
+      background:
+        radial-gradient(circle at center, rgba(17, 47, 73, 0.9) 0%, rgba(8, 15, 25, 0.95) 25%, rgba(0, 0, 0, 1) 70%);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
     }
@@ -29,37 +33,56 @@
       position: absolute;
       inset: 0;
       cursor: grab;
+      z-index: 1;
     }
 
-    #canvas-container:active {
-      cursor: grabbing;
+    #canvas-container:active { cursor: grabbing; }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      z-index: 10;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: rgba(8, 19, 30, 0.48);
+      border: 1px solid rgba(103, 217, 255, 0.28);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.22);
+      user-select: none;
+      pointer-events: none;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
     .panel {
       position: absolute;
       left: 50%;
-      bottom: 26px;
+      bottom: 28px;
       transform: translateX(-50%);
-      background: var(--panel-bg);
+      background: rgba(7, 18, 29, 0.74);
       border: 1px solid var(--panel-border);
       border-radius: 18px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), inset 0 0 22px rgba(93, 217, 255, 0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 15px 26px;
+      padding: 16px 26px;
       text-align: center;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.45), inset 0 0 18px rgba(103, 217, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       user-select: none;
       pointer-events: none;
-      z-index: 2;
+      z-index: 10;
     }
 
     .panel h1 {
       margin: 0 0 6px;
       font-size: 17px;
+      letter-spacing: 2px;
       font-weight: 700;
-      letter-spacing: 1.5px;
       color: var(--accent);
-      text-shadow: 0 0 12px rgba(93, 217, 255, 0.45);
+      text-shadow: 0 0 12px rgba(103, 217, 255, 0.6);
     }
 
     .panel p {
@@ -68,34 +91,27 @@
       color: var(--muted);
     }
 
-    .floating-label {
+    .mood-glow {
       position: absolute;
-      top: 18px;
-      left: 18px;
-      background: rgba(5, 15, 25, 0.62);
-      border: 1px solid rgba(93, 217, 255, 0.25);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 12px;
-      color: var(--accent);
-      letter-spacing: 0.8px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      user-select: none;
+      inset: 0;
+      z-index: 0;
       pointer-events: none;
-      z-index: 2;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.28);
+      background:
+        radial-gradient(circle at 50% 40%, rgba(55, 120, 255, 0.18), transparent 26%),
+        radial-gradient(circle at 65% 35%, rgba(140, 255, 245, 0.09), transparent 18%),
+        radial-gradient(circle at 40% 60%, rgba(86, 160, 255, 0.08), transparent 20%);
     }
   </style>
 </head>
 <body>
+  <div class="mood-glow"></div>
   <div id="canvas-container"></div>
 
-  <div class="floating-label">🌍 Земля • Крутіть • Масштабування • Навколишній космос</div>
+  <div class="hud">3D Explorer • Earth</div>
 
   <div class="panel">
     <h1>3D EXPLORER</h1>
-    <p>Поверніть Землю мишкою або пальцем, щоб оглянути космос</p>
+    <p>Крутіть Землю, наближайте, досліджуйте космічний простір</p>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -105,47 +121,53 @@
     const container = document.getElementById('canvas-container');
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020b15);
-    scene.fog = new THREE.FogExp2(0x020b15, 0.022);
+    scene.background = new THREE.Color(0x020914);
+    scene.fog = new THREE.FogExp2(0x020914, 0.02);
 
-    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 0.2, 3.4);
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 2500);
+    camera.position.set(0, 0.8, 4.3);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
-    // Освітлення
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+    // Lighting
+    const ambient = new THREE.AmbientLight(0xffffff, 0.48);
+    scene.add(ambient);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.6);
-    sunLight.position.set(4, 2, 5);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.7);
+    sunLight.position.set(5, 2, 6);
     scene.add(sunLight);
 
-    const rimLight = new THREE.DirectionalLight(0x5ab7ff, 0.7);
+    const rimLight = new THREE.DirectionalLight(0x6bc8ff, 0.7);
     rimLight.position.set(-4, -2, -4);
     scene.add(rimLight);
 
-    // Глобус Землі
+    // Earth group
     const earthGroup = new THREE.Group();
     scene.add(earthGroup);
 
-    const earthTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
-    const earthBump = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg');
-    const earthSpec = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg');
-    const earthClouds = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png');
+    const textureLoader = new THREE.TextureLoader();
+
+    // Earth textures
+    const earthMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
+    const earthNormal = textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg');
+    const earthSpec = textureLoader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg');
+    const earthClouds = textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png');
 
     const earthMaterial = new THREE.MeshPhongMaterial({
-      map: earthTexture,
-      bumpMap: earthBump,
+      map: earthMap,
+      bumpMap: earthNormal,
       bumpScale: 0.022,
       specularMap: earthSpec,
-      specular: new THREE.Color(0x333333),
+      specular: new THREE.Color(0x222222),
       shininess: 10,
-      emissive: 0x0d1f2d,
-      emissiveIntensity: 0.15
+      emissive: new THREE.Color(0x101e2b),
+      emissiveIntensity: 0.14
     });
 
     const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), earthMaterial);
@@ -154,56 +176,90 @@
     const cloudMaterial = new THREE.MeshPhongMaterial({
       map: earthClouds,
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.4,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
 
-    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.02, 128, 128), cloudMaterial);
+    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.03, 128, 128), cloudMaterial);
     earthGroup.add(clouds);
 
-    // Атмосфера Землі
+    // Atmosphere glow
     const atmosphereMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
       uniforms: {
-        glowColor: { value: new THREE.Color(0x43b7ff) },
-        viewVector: { value: camera.position }
+        glowColor: { value: new THREE.Color(0x4db9ff) },
+        intensity: { value: 1.3 }
       },
       vertexShader: `
         varying vec3 vNormal;
-        varying vec3 vWorldPosition;
         void main() {
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vWorldPosition = worldPosition.xyz;
           vNormal = normalize(normalMatrix * normal);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
       fragmentShader: `
         uniform vec3 glowColor;
+        uniform float intensity;
         varying vec3 vNormal;
-        varying vec3 vWorldPosition;
         void main() {
-          float intensity = pow(0.8 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.5);
-          vec3 color = glowColor * intensity;
-          gl_FragColor = vec4(color, 0.7);
+          float glow = pow(0.75 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.4);
+          gl_FragColor = vec4(glowColor * glow * intensity, 0.75);
         }
-      `,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      depthWrite: false
+      `
     });
 
     const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.12, 128, 128), atmosphereMaterial);
     earthGroup.add(atmosphere);
 
-    // Зірки
+    // Moon
+    const moonTexture = textureLoader.load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
+    const moon = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 64, 64),
+      new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 1, metalness: 0 })
+    );
+    moon.position.set(2.2, 0.7, 0.1);
+    scene.add(moon);
+
+    // Small orbit ring around Earth
+    const orbitRing = new THREE.Mesh(
+      new THREE.TorusGeometry(2.1, 0.003, 8, 200),
+      new THREE.MeshBasicMaterial({ color: 0x6fd3ff, transparent: true, opacity: 0.35 })
+    );
+    orbitRing.rotation.x = Math.PI / 2.2;
+    scene.add(orbitRing);
+
+    // Distant planets / cosmic accents
+    const planetColors = [0xffa04d, 0xff7e5f, 0xffd166, 0x7fc8ff, 0x9f86ff];
+    const decorativePlanets = [];
+    for (let i = 0; i < 10; i++) {
+      const radius = 2.1 + Math.random() * 2.8;
+      const angle = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 5.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+
+      const planet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08 + Math.random() * 0.18, 24, 24),
+        new THREE.MeshBasicMaterial({ color: planetColors[i % planetColors.length], transparent: true, opacity: 0.9 })
+      );
+
+      planet.position.set(x, y, z);
+      scene.add(planet);
+      decorativePlanets.push(planet);
+    }
+
+    // Starfield
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = 2500;
+    const starCount = 3500;
     const starPositions = [];
+    const starColors = [];
 
     for (let i = 0; i < starCount; i++) {
-      const radius = 18 + Math.random() * 20;
+      const radius = 26 + Math.random() * 55;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
@@ -212,44 +268,38 @@
       const z = radius * Math.sin(phi) * Math.sin(theta);
 
       starPositions.push(x, y, z);
+
+      const color = new THREE.Color().setHSL(0.55 + Math.random() * 0.18, 0.8, 0.7 + Math.random() * 0.2);
+      starColors.push(color.r, color.g, color.b);
     }
 
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
 
-    const starMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.06,
-      transparent: true,
-      opacity: 0.9
-    });
-
-    const stars = new THREE.Points(starGeometry, starMaterial);
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        size: 0.09,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false
+      })
+    );
     scene.add(stars);
 
-    // Месяць
-    const moonTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
-    const moon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.17, 64, 64),
-      new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 1, metalness: 0 })
-    );
-    moon.position.set(2.2, 0.6, 0);
-    scene.add(moon);
+    // Nebula soft clouds
+    const nebulaGeo = new THREE.SphereGeometry(30, 32, 32);
+    const nebulaMat = new THREE.MeshBasicMaterial({
+      color: 0x275f9a,
+      transparent: true,
+      opacity: 0.05,
+      side: THREE.BackSide
+    });
+    const nebula = new THREE.Mesh(nebulaGeo, nebulaMat);
+    scene.add(nebula);
 
-    // Небо і орбіти
-    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x3a6d9d, transparent: true, opacity: 0.2 });
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-3, 0, 0),
-      new THREE.Vector3(3, 0, 0)
-    ]);
-    const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
-    orbit.rotation.x = Math.PI / 2;
-    scene.add(orbit);
-
-    const orbit2 = new THREE.Line(orbitGeometry.clone(), orbitMaterial.clone());
-    orbit2.rotation.z = Math.PI / 2.5;
-    scene.add(orbit2);
-
-    // Управління камерою
+    // Camera controls
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
@@ -257,9 +307,8 @@
     controls.minDistance = 1.8;
     controls.maxDistance = 8;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.45;
+    controls.autoRotateSpeed = 0.5;
 
-    // Для плавного крутіння з широким зоряним фоном
     let t = 0;
 
     function animate() {
@@ -268,13 +317,21 @@
       t += 0.01;
 
       earth.rotation.y += 0.0018;
-      clouds.rotation.y += 0.0015;
-      stars.rotation.y -= 0.00015;
-      stars.rotation.x = Math.sin(t * 0.2) * 0.12;
+      clouds.rotation.y += 0.0023;
+      atmosphere.rotation.y += 0.0015;
 
-      moon.position.x = 2.2 + Math.sin(t * 0.8) * 0.25;
-      moon.position.y = 0.6 + Math.cos(t * 0.8) * 0.18;
-      moon.position.z = 0.2 + Math.sin(t * 0.6) * 0.15;
+      stars.rotation.y -= 0.00012;
+      stars.rotation.x = Math.sin(t * 0.3) * 0.08;
+      nebula.rotation.y += 0.0002;
+
+      moon.position.x = 2.2 + Math.sin(t * 0.9) * 0.2;
+      moon.position.y = 0.7 + Math.cos(t * 0.9) * 0.18;
+      moon.position.z = 0.1 + Math.sin(t * 0.75) * 0.18;
+
+      decorativePlanets.forEach((planet, idx) => {
+        planet.position.x += Math.sin(t * (0.4 + idx * 0.08)) * 0.0008;
+        planet.position.y += Math.cos(t * (0.5 + idx * 0.07)) * 0.0007;
+      });
 
       controls.update();
       renderer.render(scene, camera);
